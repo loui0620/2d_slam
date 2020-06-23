@@ -10,8 +10,8 @@
   
 
 **Program Prerequisite:**
-  - Language: Python
-  - Platform: Ubuntu
+  - Language: Python 3.6
+  - Platform: Ubuntu 
   - Open terminal and install requiring package, ```csv```, ```numpy``` and ```matplotlib``` by following commands:
 ```bash
 $ python -m pip install python-csv

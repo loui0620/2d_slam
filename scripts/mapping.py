@@ -63,7 +63,6 @@ class Mapping():
             plt.title("Indoor Map")
             
             if self.save_result:
-                print("result saved")
                 plt.savefig(save_path + 'task2_point_map.png')
             
             plt.close('all')
@@ -94,7 +93,7 @@ class Mapping():
             
             if abs(x_grid) > 0 and abs(y_grid) > 0:
                 mask[x_grid][y_grid] = 1
-                if i % 4 == 0:
+                if i % 2 == 0:
                     tuple_data.append([sweep_data[i][0], sweep_data[i][1]])
 
         plt.close('all')

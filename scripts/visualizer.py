@@ -24,11 +24,11 @@ class Drawer():
 
         for i,j,k in zip(x,y,n):
             label = k
-            plt.annotate(label, # this is the text
-                        (i,j), # this is the point to label
-                        textcoords="offset points", # how to position the text
-                        xytext=(0,10), # distance from text to points (x,y)
-                        ha='center') # horizontal alignment can be left, right or center
+            plt.annotate(label, 
+                        (i,j),
+                        textcoords="offset points",
+                        xytext=(0,10),
+                        ha='center')
 
         plt.xlabel("x-axis")
         plt.ylabel("y-axis")
@@ -58,11 +58,11 @@ class Drawer():
                         pts_x = sweep_data_glob[:,0]
                         pts_y = sweep_data_glob[:,1]
 
-                        plt.annotate(label, # this is the text
-                                drone_data.drone_position[i], # this is the point to label
-                                textcoords="offset points", # how to position the text
-                                xytext=(0,10), # distance from text to points (x,y)
-                                ha='center') # horizontal alignment can be left, right or center
+                        plt.annotate(label, 
+                                drone_data.drone_position[i], 
+                                textcoords="offset points", 
+                                xytext=(0,10), 
+                                ha='center') 
 
                         plt.scatter(pts_x, pts_y, s=20, edgecolors='none')
                         
@@ -80,11 +80,11 @@ class Drawer():
                         pts_x = sweep_data_glob[:,0]
                         pts_y = sweep_data_glob[:,1]
 
-                        plt.annotate(label, # this is the text
-                                drone_data.drone_position[id], # this is the point to label
-                                textcoords="offset points", # how to position the text
-                                xytext=(0,10), # distance from text to points (x,y)
-                                ha='center') # horizontal alignment can be left, right or center
+                        plt.annotate(label, 
+                                drone_data.drone_position[id], 
+                                textcoords="offset points", 
+                                xytext=(0,10),
+                                ha='center') 
 
                         plt.scatter(pts_x, pts_y, s=20, edgecolors='none')
 

@@ -48,8 +48,8 @@ def runRerouting(obstacle_list, start_grid, end_grid, is_save=False):
     sy = start_grid[1]  # [m]
     gx = end_grid[0]  # [m]
     gy = end_grid[1]  # [m]
-    grid_size = 0.5  # [m]
-    robot_radius = 0.5  # [m]
+    grid_size = 0.4  # [m]
+    robot_radius = 0.3  # [m]
 
     # set obstacle positions
     ox, oy = [], []
@@ -89,6 +89,7 @@ def main(argv):
     path_file = ''
     lidar_file = ''
     data_to_show = []
+    
     try:
         opts, args = getopt.getopt(argv,"hp:d:n:s:",["path=","lidar_data=","show_data=", "save="])
     except getopt.GetoptError:
@@ -104,7 +105,8 @@ def main(argv):
             lidar_file = arg
         elif opt in ("-n", "--show_data"):
             list_str = arg
-            data_to_show = list(map(int, list_str.strip('[]').split(',')))
+            if list_str != '[]':
+                data_to_show = list(map(int, list_str.strip('[]').split(',')))
         elif opt in ("-s", "--save"):
             is_save = arg
             if is_save.lower() == 'true':
@@ -120,6 +122,9 @@ def main(argv):
     
     choice = ask_user()
 
+    route_path = save_path + 'ReroutedPath.csv'
+    map_path = save_path + 'Map.csv'
+
     # 1. Visualizing Task
     if choice in {'a', 'd'}:
         drawer = Drawer()
@@ -131,7 +136,7 @@ def main(argv):
     if choice in {'b', 'd'}:
         map_mgr = Mapping()
         map_mgr.save_result = save_result    
-        map_data = map_mgr.runMappingAndSave(lidar_data, drone_data, 'map.csv')
+        map_data = map_mgr.runMappingAndSave(lidar_data, drone_data, map_path)
         map_grid, obstacle_list = map_mgr.gridlizeMapData(map_data)
         
     # 3. Path Optimization Task
@@ -139,15 +144,16 @@ def main(argv):
         if choice == 'c':
             map_mgr = Mapping()  
             map_mgr.save_result = save_result    
-            map_data = map_mgr.runMappingAndSave(lidar_data, drone_data, 'map.csv')
+            map_data = map_mgr.runMappingAndSave(lidar_data, drone_data, map_path)
             map_grid, obstacle_list = map_mgr.gridlizeMapData(map_data)
 
-        start_grid = drone_data.drone_position[0] # 0-th
-        end_grid = drone_data.drone_position[-2] # 16-th
+        start_grid = drone_data.drone_position[0] # 0-th 
+        end_grid = drone_data.drone_position[-2] # 16-th 
+        #end_grid = [20,4] 
 
         path = runRerouting(obstacle_list, start_grid, end_grid, save_result)
-
-        with open('ReroutedPath.csv', 'w', newline='') as csvfile:
+        
+        with open(route_path, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             cnt = 0
             for i in range(len(path)):
