@@ -1,72 +1,328 @@
-import os
+'''
+MIT License
+Copyright (c) 2019 Fanjin Zeng
+This work is licensed under the terms of the MIT license, see <https://opensource.org/licenses/MIT>.  
+'''
+
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as mpl
-from matplotlib.animation import FuncAnimation
-from data_loader import DataLoader, DroneTrajectoryData, LidarSweepData
-import math
-import scipy.optimize as scimin
+from random import random
+import matplotlib.pyplot as plt
+from matplotlib import collections  as mc
+from collections import deque
 
-class Optimizer():
+class Line():
+    ''' Define line '''
+    def __init__(self, p0, p1):
+        self.p = np.array(p0)
+        self.dirn = np.array(p1) - np.array(p0)
+        self.dist = np.linalg.norm(self.dirn)
+        self.dirn /= self.dist # normalize
+
+    def path(self, t):
+        return self.p + t * self.dirn
+
+
+def Intersection(line, center, radius):
+    ''' Check line-sphere (circle) intersection '''
+    a = np.dot(line.dirn, line.dirn)
+    b = 2 * np.dot(line.dirn, line.p - center)
+    c = np.dot(line.p - center, line.p - center) - radius * radius
+
+    discriminant = b * b - 4 * a * c
+    if discriminant < 0:
+        return False
+
+    t1 = (-b + np.sqrt(discriminant)) / (2 * a);
+    t2 = (-b - np.sqrt(discriminant)) / (2 * a);
+
+    if (t1 < 0 and t2 < 0) or (t1 > line.dist and t2 > line.dist):
+        return False
+
+    return True
+
+
+
+def distance(x, y):
+    return np.linalg.norm(np.array(x) - np.array(y))
+
+
+def isInObstacle(vex, obstacles, radius):
+    for obs in obstacles:
+        if distance(obs, vex) < radius:
+            return True
+    return False
+
+
+def isThruObstacle(line, obstacles, radius):
+    for obs in obstacles:
+        if Intersection(line, obs, radius):
+            return True
+    return False
+
+
+def nearest(G, vex, obstacles, radius):
+    Nvex = None
+    Nidx = None
+    minDist = float("inf")
+
+    for idx, v in enumerate(G.vertices):
+        line = Line(v, vex)
+        if isThruObstacle(line, obstacles, radius):
+            continue
+
+        dist = distance(v, vex)
+        if dist < minDist:
+            minDist = dist
+            Nidx = idx
+            Nvex = v
+
+    return Nvex, Nidx
+
+
+def newVertex(randvex, nearvex, stepSize):
+    dirn = np.array(randvex) - np.array(nearvex)
+    length = np.linalg.norm(dirn)
+    dirn = (dirn / length) * min (stepSize, length)
+
+    newvex = (nearvex[0]+dirn[0], nearvex[1]+dirn[1])
+    return newvex
+
+
+def window(startpos, endpos):
+    ''' Define seach window - 2 times of start to end rectangle'''
+    width = endpos[0] - startpos[0]
+    height = endpos[1] - startpos[1]
+    winx = startpos[0] - (width / 2.)
+    winy = startpos[1] - (height / 2.)
+    return winx, winy, width, height
+
+
+def isInWindow(pos, winx, winy, width, height):
+    ''' Restrict new vertex insides search window'''
+    if winx < pos[0] < winx+width and \
+        winy < pos[1] < winy+height:
+        return True
+    else:
+        return False
+
+
+class Graph:
+    ''' Define graph '''
+    def __init__(self, startpos, endpos):
+        self.startpos = startpos
+        self.endpos = endpos
+
+        self.vertices = [startpos]
+        self.edges = []
+        self.success = False
+
+        self.vex2idx = {startpos:0}
+        self.neighbors = {0:[]}
+        self.distances = {0:0.}
+
+        self.sx = endpos[0] - startpos[0]
+        self.sy = endpos[1] - startpos[1]
+
+    def add_vex(self, pos):
+        try:
+            idx = self.vex2idx[pos]
+        except:
+            idx = len(self.vertices)
+            self.vertices.append(pos)
+            self.vex2idx[pos] = idx
+            self.neighbors[idx] = []
+        return idx
+
+    def add_edge(self, idx1, idx2, cost):
+        self.edges.append((idx1, idx2))
+        self.neighbors[idx1].append((idx2, cost))
+        self.neighbors[idx2].append((idx1, cost))
+
+
+    def randomPosition(self):
+        rx = random()
+        ry = random()
+
+        posx = self.startpos[0] - (self.sx / 2.) + rx * self.sx * 2
+        posy = self.startpos[1] - (self.sy / 2.) + ry * self.sy * 2
+        return posx, posy
+
+class RRTSolver():
     def __init__(self):
-        self.optimizer = None
+        self.ID = None
 
-    def getBoundaryDistance(self):
+    def RRT(self, startpos, endpos, obstacles, n_iter, radius, stepSize):
+        ''' RRT algorithm '''
+        G = Graph(startpos, endpos)
 
-        return 0
+        for _ in range(n_iter):
+            randvex = G.randomPosition()
+            if isInObstacle(randvex, obstacles, radius):
+                continue
 
-def covertDistanceToEuclidLocal(sweep_data, drone_pos=None):
-    ret = []
-    sweep_data = np.array(sweep_data)
-    
-    for i in range(sweep_data.shape[0]):
-        x = sweep_data[i, 1] * np.cos(np.radians(sweep_data[i, 0])) * 0.001
-        y = sweep_data[i, 1] * np.sin(np.radians(sweep_data[i, 0])) * 0.001
-        ret.append([x, y])
-        
-    ret = np.array(ret)
+            nearvex, nearidx = nearest(G, randvex, obstacles, radius)
+            if nearvex is None:
+                continue
 
-    return ret
+            newvex = newVertex(randvex, nearvex, stepSize)
 
-drone_data = DroneTrajectoryData('FlightPath.csv')
-lidar_data = LidarSweepData('LIDARPoints.csv')
+            newidx = G.add_vex(newvex)
+            dist = distance(newvex, nearvex)
+            G.add_edge(newidx, nearidx, dist)
 
-upper_bounds = []
-for i in range(len(lidar_data.sweep_data_raw)):
-    lidar_data_local = covertDistanceToEuclidLocal(lidar_data.sweep_data_raw[i])
-    mean_upper_bound = np.mean(lidar_data_local[i, 1], dtype=np.float64)
-    upper_bounds.append(mean_upper_bound)
+            dist = distance(newvex, G.endpos)
+            if dist < 2 * radius:
+                endidx = G.add_vex(G.endpos)
+                G.add_edge(newidx, endidx, dist)
+                G.success = True
+                #print('success')
+                # break
+        return G
 
 
-# datax=numpy.array([1,2,3,4,5]) # data coordinates
-# datay=numpy.array([2.95,6.03,11.2,17.7,26.8])
-datax=lidar_data.scan_ID[:3]
-datay=np.array(upper_bounds[:3])
-constraintmaxx=np.array([0]) # list of maximum constraints
-constraintmaxy=np.array([1.2])
+    def RRT_star(self, startpos, endpos, obstacles, n_iter, radius, stepSize):
+        ''' RRT star algorithm '''
+        G = Graph(startpos, endpos)
 
-# least square fit without constraints
-def fitfunc(x,p): # model $f(x)=a x^2+c
-    a,c=p
-    return c+a*x**2
-def residuals(p): # array of residuals
-    return datay-fitfunc(datax,p)
-p0=[1,2] # initial parameters guess
-pwithout,cov,infodict,mesg,ier=scimin.leastsq(residuals, p0,full_output=True) #traditionnal least squares fit
+        for _ in range(n_iter):
+            randvex = G.randomPosition()
+            if isInObstacle(randvex, obstacles, radius):
+                continue
 
-# least square fir with constraints
-def sum_residuals(p): # the function we want to minimize
-    return sum(residuals(p)**2)
-def constraints(p): # the constraints: all the values of the returned array will be >=0 at the end
-    return constraintmaxy-fitfunc(constraintmaxx,p)
-pwith=scimin.fmin_slsqp(sum_residuals,pwithout,f_ieqcons=constraints) # minimization with constraint
+            nearvex, nearidx = nearest(G, randvex, obstacles, radius)
+            if nearvex is None:
+                continue
 
-# plotting
-ax=mpl.figure().add_subplot(1,1,1)
-ax.plot(datax,datay,ls="",marker="x",color="blue",mew=2.0,label="Datas")
-ax.plot(constraintmaxx,constraintmaxy,ls="",marker="x",color="red",mew=2.0,label="Max points")
-morex=np.linspace(0,len(datax)+1,100)
-ax.plot(morex,fitfunc(morex,pwithout),color="blue",label="Fit without constraints")
-ax.plot(morex,fitfunc(morex,pwith),color="red",label="Fit with constraints")
-ax.legend(loc=2)
-mpl.show()
+            newvex = newVertex(randvex, nearvex, stepSize)
+
+            newidx = G.add_vex(newvex)
+            dist = distance(newvex, nearvex)
+            G.add_edge(newidx, nearidx, dist)
+            G.distances[newidx] = G.distances[nearidx] + dist
+
+            # update nearby vertices distance (if shorter)
+            for vex in G.vertices:
+                if vex == newvex:
+                    continue
+
+                dist = distance(vex, newvex)
+                if dist > radius:
+                    continue
+
+                line = Line(vex, newvex)
+                if isThruObstacle(line, obstacles, radius):
+                    continue
+
+                idx = G.vex2idx[vex]
+                if G.distances[newidx] + dist < G.distances[idx]:
+                    G.add_edge(idx, newidx, dist)
+                    G.distances[idx] = G.distances[newidx] + dist
+
+            dist = distance(newvex, G.endpos)
+            if dist < 2 * radius:
+                endidx = G.add_vex(G.endpos)
+                G.add_edge(newidx, endidx, dist)
+                try:
+                    G.distances[endidx] = min(G.distances[endidx], G.distances[newidx]+dist)
+                except:
+                    G.distances[endidx] = G.distances[newidx]+dist
+
+                G.success = True
+                #print('success')
+                # break
+        return G
+
+
+
+    def dijkstra(self, G):
+        '''
+        Dijkstra algorithm for finding shortest path from start position to end.
+        '''
+        srcIdx = G.vex2idx[G.startpos]
+        dstIdx = G.vex2idx[G.endpos]
+
+        # build dijkstra
+        nodes = list(G.neighbors.keys())
+        dist = {node: float('inf') for node in nodes}
+        prev = {node: None for node in nodes}
+        dist[srcIdx] = 0
+
+        while nodes:
+            curNode = min(nodes, key=lambda node: dist[node])
+            nodes.remove(curNode)
+            if dist[curNode] == float('inf'):
+                break
+
+            for neighbor, cost in G.neighbors[curNode]:
+                newCost = dist[curNode] + cost
+                if newCost < dist[neighbor]:
+                    dist[neighbor] = newCost
+                    prev[neighbor] = curNode
+
+        # retrieve path
+        path = deque()
+        curNode = dstIdx
+        while prev[curNode] is not None:
+            path.appendleft(G.vertices[curNode])
+            curNode = prev[curNode]
+        path.appendleft(G.vertices[curNode])
+        return list(path)
+
+
+
+    def plotResult(self, G, obstacles, radius, path=None):
+        '''
+        Plot RRT, obstacles and shortest path
+        '''
+        px = [x for x, y in G.vertices]
+        py = [y for x, y in G.vertices]
+        fig, ax = plt.subplots()
+
+        for obs in obstacles:
+            circle = plt.Circle(obs, radius, color='red')
+            ax.add_artist(circle)
+
+        ax.scatter(px, py, c='cyan')
+        ax.scatter(G.startpos[0], G.startpos[1], c='black')
+        ax.scatter(G.endpos[0], G.endpos[1], c='black')
+
+        lines = [(G.vertices[edge[0]], G.vertices[edge[1]]) for edge in G.edges]
+        lc = mc.LineCollection(lines, colors='green', linewidths=2)
+        ax.add_collection(lc)
+
+        if path is not None:
+            paths = [(path[i], path[i+1]) for i in range(len(path)-1)]
+            lc2 = mc.LineCollection(paths, colors='blue', linewidths=3)
+            ax.add_collection(lc2)
+
+        ax.autoscale()
+        ax.margins(0.1)
+        plt.show()
+
+
+def pathSearch(startpos, endpos, obstacles, n_iter, radius, stepSize):
+    G = RRT_star(startpos, endpos, obstacles, n_iter, radius, stepSize)
+    if G.success:
+        path = dijkstra(G)
+        # plot(G, obstacles, radius, path)
+        return path
+
+
+if __name__ == '__main__':
+    startpos = (0., 0.)
+    endpos = (5., 5.)
+    obstacles = [(1., 1.), (2., 2.)]
+    n_iter = 200
+    radius = 0.8
+    stepSize = 0.7
+
+    solver = RRTSolver()
+    G = solver.RRT_star(startpos, endpos, obstacles, n_iter, radius, stepSize)
+    # G = RRT(startpos, endpos, obstacles, n_iter, radius, stepSize)
+
+    if G.success:
+        path = solver.dijkstra(G)
+        print(path)
+        solver.plotResult(G, obstacles, radius, path)
+    else:
+        solver.plotResult(G, obstacles, radius)

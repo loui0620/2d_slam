@@ -26,8 +26,8 @@ class DataLoader():
                         temp1 = float(row[0].strip().split(',')[0])
                         temp2 = float(row[0].strip().split(',')[1])   
                         
-                        self.drone_pos.append([-1 * temp2, temp1])  
-                        #self.drone_pos.append([-1 * temp1, temp2])  
+                        #self.drone_pos.append([-1*temp2, temp1])  
+                        self.drone_pos.append([temp1, temp2])  
 
                 read_cnt += 1
         
