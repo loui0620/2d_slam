@@ -112,7 +112,7 @@ def main(argv):
             else:
                 save_result = False
         else:
-            print ('\nUsage Example: python scripts/main.py --path FlightPath.csv --lidar_data LIDARPoints.csv -n [0,1,2]\n')
+            print ('\nUsage Example: python scripts/main.py --path FlightPath.csv --lidar_data LIDARPoints.csv -n [0,1,2] --save true\n')
             sys.exit()
 
     drone_data = DroneTrajectoryData(path_file)

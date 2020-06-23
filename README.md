@@ -35,3 +35,18 @@ Choose Function to Run: (A) visualization (B) mapping (C) rerouting (D) all
 Please enter above options:
 ```
 Choose by typing Alphbet header, press ```d``` to run all functions.
+
+
+# Detail and Analysis
+
+  - **Task1: Visualizing**
+    - Read from *FlightPath.csv* and *LIDARPoints* to display trajectory and maps. Could display desired LIDAR sweeps separately by input argument ```-n [1,3,5...etc]```
+    - ![alt text](https://i.imgur.com/HS76e2R.png)
+  - **Task2: Mapping**
+    - By given position and identified sweep data, this task is aimed to build full map and store data in ```map.csv``` at root folder.
+    - Generated 2D points will be converted into 2D binary grid image to provide data for the re-routing task coming next.
+    ![alt text](https://i.imgur.com/VFTceKM.png)
+  -  **Task3: Re-routing**
+        - This function has default input of start & end point from *FlightPath.csv*. It's also optional to assign other different goal within area, as figure shows below.
+        ![alt text](https://i.imgur.com/Msq17gU.png)
+        -  I chose *Dijkstra algorithm* to run path planning this time. At first I used familiar RRTStar method to run it.
