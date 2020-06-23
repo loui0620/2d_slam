@@ -1,4 +1,4 @@
-# Socville Challenge
+# Scoville Challenge
 
 - Input: (1) FlightPath.csv in (x, y), which contains drone position in XY coordinate. (2) lidar data sweeped in each position on trajectory.
 - This program will output 
