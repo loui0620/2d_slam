@@ -1,4 +1,4 @@
-# Socville Challenge: 2D SLAM
+# Socville Challenge
 
 - Input: (1) FlightPath.csv in (x, y), which contains drone position in XY coordinate. (2) lidar data sweeped in each position on trajectory.
 - This program will output 
@@ -49,4 +49,6 @@ Choose by typing Alphbet header, press ```d``` to run all functions.
   -  **Task3: Re-routing**
         - This function has default input of start & end point from *FlightPath.csv*. It's also optional to assign other different goal within area, as figure shows below.
         ![alt text](https://i.imgur.com/Msq17gU.png)
-        -  I chose *Dijkstra algorithm* to run path planning this time. At first I used familiar RRTStar method to run it.
+        -  I chose *Dijkstra algorithm* to run path planning this time. At first, I chose another familiar method which is *RRT(Rapid-exploring Random Tree)* to run it. RRT is a useful method to solve multi-DOF robot planning such as multi-joint planning. But due to the approach, RRT is a pure random searching method, in-sensitivity to environment feature and drastically-affected by narrow-tunneled feature between rooms. RRT could barely achieve convergence before reaching the search time limit, as figure shows above. 
+        -  Then replace it by Dijkstra method, Dijkstra has some advantages such as finds shortest path in O( E+ V Log(V) ) if using a min priority queue. And assurance of shortest-path retrieval. But it fails in cases where you have a negative edge inside search graph. By setting search step and grid size we could assure it could find shortest path even passing through the narrow tunnels.
+
