@@ -34,7 +34,9 @@ class Drawer():
         plt.title("Drone Trajectory")
         if self.save_result:
             plt.savefig(save_path + 'task1_trajectory.png')
-        plt.show()
+        plt.show(block=False)
+        plt.pause(2)
+        plt.close()
 
 
     def drawLIDARPoints(self, lidar_data, drone_data, data_to_show=None, with_trace=True):
@@ -96,7 +98,9 @@ class Drawer():
             plt.title("Lidar Sweep Data")
             if self.save_result:
                 plt.savefig(save_path + 'task1_visualized.png')
-            plt.show()
+            plt.show(block=False)
+            plt.pause(2)
+            plt.close()
         
     def covertDistanceToEuclidWorld(self, sweep_data, drone_pos):
         ret = []
