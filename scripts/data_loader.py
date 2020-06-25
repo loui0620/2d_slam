@@ -69,7 +69,7 @@ class DataLoader():
 
                 read_cnt += 1
 
-        return np.array(self.scan_ID), np.array(self.sweep_data)
+        return np.array(self.scan_ID, dtype=object), np.array(self.sweep_data, dtype=object)
     
     def isRepresentInt(self, s):
         try: 
