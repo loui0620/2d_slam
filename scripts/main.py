@@ -81,7 +81,7 @@ def runRerouting(obstacle_list, start_grid, end_grid, is_save=False):
             fig.savefig(save_path + 'task3_rerouted.png')
         plt.pause(0.01)
         plt.show()
-    plt.close()
+    plt.close('all')
 
     return path
 
