@@ -54,6 +54,6 @@ Choose by typing Alphbet header, press ```d``` to run all functions.
         -  This function will output as ```result/ReroutedPath.csv``` in root folder. The output format is same as FlightPath data, first line is (position_ID, 1), and the following X&Y data points.
 
 # Reference Materials
-[Dijkstra](https://www.programiz.com/dsa/dijkstra-algorithm)
-[RRT](https://medium.com/@theclassytim/robotic-path-planning-rrt-and-rrt-212319121378)
-[Python Robotics](https://github.com/AtsushiSakai/PythonRobotics)
+  - [Dijkstra](https://www.programiz.com/dsa/dijkstra-algorithm)
+  - [RRT](https://medium.com/@theclassytim/robotic-path-planning-rrt-and-rrt-212319121378)
+  - [Python Robotics](https://github.com/AtsushiSakai/PythonRobotics)
