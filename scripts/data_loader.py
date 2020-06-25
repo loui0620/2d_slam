@@ -55,11 +55,6 @@ class DataLoader():
                         head_idx = read_cnt
                         data_length = int(temp2)
                         
-                        # print("set_cnt: {}".format(set_cnt))
-                        # print("head_index: {}".format(head_idx))
-                        # print("data_length: {}".format(temp2))
-                        # print("prev_data_size: {}".format(len(sweep_temp)))
-                        
                         sweep_temp = []
                         set_cnt += 1
                         
@@ -69,9 +64,6 @@ class DataLoader():
                         sweep_temp.append([float(temp1), float(temp2)])
 
                         if read_cnt == head_idx + data_length:
-                            # print("line number: {}".format(read_cnt))
-                            # print("last data: {}, {}".format(float(temp1), float(temp2)))
-                            # print("last size data: {}\n".format(len(sweep_temp)))
                             self.sweep_data.append(sweep_temp)
 
 

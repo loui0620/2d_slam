@@ -148,6 +148,7 @@ def main(argv):
             map_data = map_mgr.runMappingAndSave(lidar_data, drone_data, map_path)
             map_grid, obstacle_list = map_mgr.gridlizeMapData(map_data)
 
+        # Assign the start & end points here
         start_grid = drone_data.drone_position[0] # 0-th 
         end_grid = drone_data.drone_position[-2] # 16-th 
         #end_grid = [20,4] 
