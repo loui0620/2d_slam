@@ -40,7 +40,7 @@ Choose by typing Alphbet header, press ```d``` to run all functions.
 # Detail and Analysis
 
   - **Task1: Visualizing**
-    - Read from *FlightPath.csv* and *LIDARPoints* to display trajectory and maps. Could display desired LIDAR sweeps separately by input argument ```-n [1,3,5...etc]```
+    - Read from *FlightPath.csv* and *LIDARPoints* to display trajectory and maps. Could display desired LIDAR sweeps separately by input argument. Calculate the radial degree as counter-clockwise order (By adding negative sign on lidar_y data) to correctly reconstruct the landscape. ```-n [1,3,5...etc]```
     - ![alt text](https://i.imgur.com/HS76e2R.png)
   - **Task2: Mapping**
     - By given position and identified sweep data, this task is aimed to build full map and store data in ```result/Map.csv``` at root folder. The format is same as LIDARPoint data, first line is (map_ID, data_line_num), and following are the X&Y data points.
