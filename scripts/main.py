@@ -5,7 +5,6 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
-from matplotlib.animation import FuncAnimation
 from data_loader import DataLoader, DroneTrajectoryData, LidarSweepData
 from optimizer import RRTSolver
 from dijkstra import Dijkstra
